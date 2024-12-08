@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strings"
+	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
@@ -13,10 +15,9 @@ func open_workflow(workflow string) error {
 
 	cmd.Dir = workflow
 
-	cmd.Start()
 	err := cmd.Start()
 	if err != nil {
-		return fmt.Errorf("failed to open workflow: %w", err)
+		return fmt.Errorf("failed to open: %w", err)
 	}
 
 	return nil
@@ -28,9 +29,27 @@ type model struct {
 	selected map[int]struct{}
 }
 
+func read_from_workflows_file() []string {
+
+	file, err := os.Open("/home/hitori/.config/ttyfio/workflows.ttyfio")
+
+	file_data := make([]byte, 1024)
+
+	file.Read(file_data)
+
+	workflows := strings.Split(string(file_data), "\n")
+
+	if err != nil {
+		return []string{}
+	}
+
+	workflows_count := len(workflows) - 1 // minus one becuase it counts the \n for the new line at the end of the file
+	return workflows[:workflows_count]
+}
+
 func initialModel() model {
 	return model{
-		choices:  []string{"uni", "/home/hitori/kodoku/Sliver_Server_Detection/"},
+		choices:  read_from_workflows_file(),
 		selected: make(map[int]struct{}),
 	}
 }
@@ -51,26 +70,27 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.cursor--
 			}
 		case "down", "j":
-			if m.cursor < len(m.choices) {
+			if m.cursor < len(m.choices)-1 {
 				m.cursor++
 			}
 		case "enter", " ":
-			_, ok := m.selected[m.cursor]
-			if ok {
-				open_workflow(m.choices[m.cursor])
-			} else {
-				m.selected[m.cursor] = struct{}{}
-			}
-
+			open_workflow(m.choices[m.cursor])
+			time.Sleep(500 * time.Millisecond)
+			os.Exit(0)
 		}
 	}
 	return m, nil
 }
 
 func (m model) View() string {
-	s := "hi chris. what would you like to do?\n\n"
-
+	s := `                                                         ╋╋╋┏┓╋╋╋╋╋╋╋╋╋╋╋╋╋╋╋╋╋╋┏┓╋╋╋┏┓
+                                                        ┏┳┳┫┗┳━┓┏━┓┏┳┳━┓┏┳┳━┳┳┓┃┗┳━┳┛┣━┓┏┳┓
+                                                        ┃┃┃┃┃┃╋┃┃╋┗┫┏┫┻┫┃┃┃╋┃┃┃┃┏┫╋┃╋┃╋┗┫┃┃
+                                                        ┗━━┻┻┻━┛┗━━┻┛┗━┛┣┓┣━┻━┛┗━┻━┻━┻━━╋┓┃
+                                                        ╋╋╋╋╋╋╋╋╋╋╋╋╋╋╋╋┗━┛╋╋╋╋╋╋╋╋╋╋╋╋╋┗━┛`
+	s += "\n\n\n"
 	for i, choice := range m.choices {
+
 		cursor := " "
 		if m.cursor == i {
 			cursor = ">"
@@ -78,14 +98,13 @@ func (m model) View() string {
 
 		checked := " "
 		if _, ok := m.selected[i]; ok {
-			checked = "x"
 		}
 
-		s += fmt.Sprintf("%s [%s] %s\n", cursor, checked, choice)
+		s += fmt.Sprintf("\n                                                 %s [%s] %s\n\n", cursor, checked, choice)
 
 	}
 
-	s += "\nPress q to quit.\n"
+	s += "\n(q) There is peace in death.\n"
 	return s
 }
 
