@@ -29,22 +29,25 @@ type model struct {
 	selected map[int]struct{}
 }
 
-func read_from_workflows_file() []string {
-
+func get_conf_file() string {
 	file, err := os.Open("/home/hitori/.config/ttyfio/workflows.ttyfio")
 
 	file_data := make([]byte, 1024)
-
 	file.Read(file_data)
-
-	workflows := strings.Split(string(file_data), "\n")
-
 	if err != nil {
-		return []string{}
+		return ""
 	}
+	return string(file_data)
+}
+func get_title() string {
+	return strings.Split(get_conf_file(), "<title>")[1]
+}
 
-	workflows_count := len(workflows) - 1 // minus one becuase it counts the \n for the new line at the end of the file
-	return workflows[:workflows_count]
+func read_from_workflows_file() []string {
+	data := get_conf_file()
+	workflows := strings.Fields(strings.Split(data, "<title>")[2])
+	return workflows[:len(workflows)-1]
+
 }
 
 func initialModel() model {
@@ -83,11 +86,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) View() string {
-	s := `                                                         ╋╋╋┏┓╋╋╋╋╋╋╋╋╋╋╋╋╋╋╋╋╋╋┏┓╋╋╋┏┓
-                                                        ┏┳┳┫┗┳━┓┏━┓┏┳┳━┓┏┳┳━┳┳┓┃┗┳━┳┛┣━┓┏┳┓
-                                                        ┃┃┃┃┃┃╋┃┃╋┗┫┏┫┻┫┃┃┃╋┃┃┃┃┏┫╋┃╋┃╋┗┫┃┃
-                                                        ┗━━┻┻┻━┛┗━━┻┛┗━┛┣┓┣━┻━┛┗━┻━┻━┻━━╋┓┃
-                                                        ╋╋╋╋╋╋╋╋╋╋╋╋╋╋╋╋┗━┛╋╋╋╋╋╋╋╋╋╋╋╋╋┗━┛`
+	s := get_title()
 	s += "\n\n\n"
 	for i, choice := range m.choices {
 
