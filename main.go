@@ -87,6 +87,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m model) View() string {
 	s := get_title()
+
 	s += "\n\n\n"
 	for i, choice := range m.choices {
 
