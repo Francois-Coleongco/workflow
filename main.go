@@ -5,22 +5,25 @@ import (
 	"os"
 	"os/exec"
 	"strings"
-	"time"
-
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-func open_workflow(workflow string) error {
+func open_workflow(workflow string) {
 	cmd := exec.Command("kitty", "--detach", "tmux")
 
 	cmd.Dir = workflow
 
 	err := cmd.Start()
 	if err != nil {
-		return fmt.Errorf("failed to open: %w", err)
+		fmt.Println("err with starting workflow", err)
+	}
+	err = cmd.Wait()
+
+	if err != nil {
+		fmt.Println("err with workflow", err)
 	}
 
-	return nil
+	os.Exit(0)
 }
 
 type model struct {
@@ -78,8 +81,6 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		case "enter", " ":
 			open_workflow(m.choices[m.cursor])
-			time.Sleep(500 * time.Millisecond)
-			os.Exit(0)
 		}
 	}
 	return m, nil
