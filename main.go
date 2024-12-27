@@ -82,8 +82,7 @@ func read_parents() ([]string, string) {
 	data, home_dir := get_conf_file()
 	parsed := strings.Fields(strings.Split(data, "<title>")[2])[0]
 	parent_dirs := strings.Split(parsed, ":")
-	len_parent_dirs := len(parent_dirs)
-	return parent_dirs[:len_parent_dirs-1], home_dir
+	return parent_dirs, home_dir
 }
 
 func read_children(parent_dir string) []string {
@@ -108,6 +107,8 @@ func all_dirs_consolidator() []choice {
 	var all_dirs []choice
 
 	parent_dirs, home_dir := read_parents()
+
+	fmt.Println("these are parents", parent_dirs)
 
 	counter := 0
 
